@@ -92,7 +92,7 @@ class DynamicModelViewSet(viewsets.ModelViewSet):
         queryset = self.model.objects.all()
         filter_class = FILTER_MAPPING.get(model_name.lower())
         if filter_class:
-            my_filter = filter_class(request.GET, queryset=queryset)
+            my_filter = filter_class(queryset=queryset)
             queryset = my_filter.qs
         else:
             my_filter = None
@@ -157,8 +157,22 @@ def manage_invoices(request):
 def modify_and_send_file(request, invoice_id):
     try:
         invoice = get_object_or_404(Invoice, pk=invoice_id)
+        partially_paid_records = PartiallyPaid.objects.filter(invoice=invoice_id)
+        print('Partially Paid Records:', partially_paid_records)
 
-        # Create a function to display foreign key relationships properly
+        # Initialize an empty list to store the records
+        installments_list = []
+        partially_paid = 0
+        # Iterate over the records and store them in the list as dictionaries
+        for record in partially_paid_records:
+            partially_paid += float(record.amount)
+            record_dict = {
+                "client_name": record.client.name,
+                "amount": float(record.amount),
+                "time": record.time.strftime('%Y-%m-%d %H:%M:%S')  # Format datetime as string
+            }
+            installments_list.append(record_dict)
+                # Create a function to display foreign key relationships properly
         def get_foreign_key_display(instance, field_name):
             fk_instance = getattr(instance, field_name)
             return str(fk_instance) if fk_instance else 'None'
@@ -210,14 +224,29 @@ def modify_and_send_file(request, invoice_id):
             {'name': 'structure : ' + invoice.structure.name, 'quantity': invoice.structure_quantity, 'price': invoice.structure_price},
             {'name': 'cabling : ' + invoice.cabling.name, 'quantity': invoice.cabling_quantity, 'price': invoice.cabling_price},
             {'name': 'net_metering : ' + invoice.net_metering.name, 'quantity': invoice.net_metering_quantity, 'price': invoice.net_metering_price},
+            {'name': 'battery : ' + invoice.battery.name, 'quantity': invoice.battery_quantity, 'price': invoice.battery_price},
+            {'name': 'lightning_arrestor : ' + invoice.lightning_arrestor.name, 'quantity': invoice.lightning_arrestor_quantity, 'price': invoice.lightning_arrestor_price},
+            {'name': 'installation : ' + invoice.installation.name, 'quantity': invoice.installation_quantity, 'price': invoice.installation_price},
             ]
         
-
+        final_block_data = [
+        ("Subtotal", invoice.total),
+        ("Discount", invoice.discount),
+        ("Discounted Amount", invoice.total - int(invoice.discount)),
+        ("Partially Paid", partially_paid),
+        ("Shipping", invoice.shipping_charges),
+        ("Total", invoice.total - int(invoice.discount) + int(invoice.shipping_charges) - int(invoice.amount_paid))
+        ]
         file_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'template.docx')
         if not os.path.exists(file_path):
             raise Http404("File not found.")
     except Invoice.DoesNotExist:
         raise Http404("Invoice not found.")
+    def list_get(lst, index, default=None):
+        try:
+            return lst[index]
+        except IndexError:
+            return default
     def handle_table0(table):
         # Set Status
         
@@ -288,42 +317,43 @@ def modify_and_send_file(request, invoice_id):
         row_index = 1  # Assuming the first row is the header row
 
         for item in client_data:
-            if row_index < len(table.rows):
-                row = table.rows[row_index].cells
-                row[1].text = str(item.get('name'))
-                row[2].text = str(item.get('quantity'))
-                row[3].text = str(item.get('price'))
-                price = int(item.get('quantity', 0)) * int(item.get('price', 0))
-                row[4].text = str(price)
-                total += price
-                row_index += 1
-            else:
-                # If there are not enough rows in the table, you can decide to add new rows if necessary
-                row = table.rows[row_index].cells
-                row[1].text = str(item.get('name'))
+            row = table.add_row()
+            # If there are not enough rows in the table, you can decide to add new rows if necessary
+            row = table.rows[row_index].cells
+            if float(item.get('quantity')) > 0.0:
+                row[0].text = str(item.get('name'))
                 row[2].text = str(item.get('quantity'))
                 row[3].text = str(item.get('price'))
                 price = int(item.get('quantity', 0)) * float(item.get('price', 0))
                 row[4].text = str(price)
                 total += price
-            # Add Subtotal
-            row = table.rows[6].cells
-            row[4].text = str(total)
-            # Add Discount
-            row = table.rows[7].cells
-            row[4].text = str(invoice.discount)
-            # Add Discounted Amount
-            row = table.rows[8].cells
-            row[4].text = str(int(total) - int(invoice.discount))
-            # Add Partially Paid
-            row = table.rows[9].cells
-            row[4].text = str(invoice.amount_paid)
-            # Add SHIPPING
-            row = table.rows[10].cells
-            row[4].text = str(invoice.shipping_charges)
-            # Add Total
-            row = table.rows[11].cells
-            row[4].text = str(int(total) - int(invoice.discount)+int(invoice.shipping_charges)- int(invoice.amount_paid))
+                row_index += 1
+
+    def handle_table3(table):
+        total = 0
+        row_index = 1  # Assuming the first row is the header row
+        total = 1000  # Dummy total value, replace with actual calculation if available
+
+        # Starting row index (assuming the first row is the header)
+        start_row_index = 6  # Adjust this based on where you want to start
+
+        max_length = max(len(installments_list), len(final_block_data))
+
+        for index in range(max_length):
+            row = table.add_row().cells
+            installment = list_get(installments_list, index, default={})
+            label, value = list_get(final_block_data, index, default=("", ""))
+
+            # Add installment data if available
+            row[0].text = str(installment.get('amount', ''))
+            row[1].text = installment.get('time', '')
+
+            # Add final block data if available and not over index limit
+            if index < len(final_block_data):
+                row[3].text = label
+                row[4].text = str(value)
+
+            row_index += 1
 
     doc = Document(file_path)
     # Adding Client data
@@ -333,9 +363,22 @@ def modify_and_send_file(request, invoice_id):
     # Adding Client data
     table = doc.tables[1]
     handle_table1(table)
+    # Set the default font and size for the entire document
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Roboto'
+    font.size = Pt(12)
+    font.color.rgb = RGBColor(0, 0, 0)  # Set font color to black
 
+    # Additional settings for font, especially for specific scripts
+    rPr = style.element.get_or_add_rPr()
+    rFonts = rPr.get_or_add_rFonts()
+    rFonts.set(qn('w:eastAsia'), 'Roboto')
     table = doc.tables[2]
     handle_table2(table)
+    
+    table = doc.tables[3]
+    handle_table3(table)
     tmp = tempfile.NamedTemporaryFile(delete=False)
     doc.save(tmp.name)
     tmp.close()  # Manually close the file to ensure all data is written

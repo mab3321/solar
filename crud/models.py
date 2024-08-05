@@ -75,6 +75,7 @@ class Expenditures(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.value}"
+
 class Invoice(models.Model, Utility):
     STATUS_CHOICES = [
         ('QUOTE', 'Quote'),
