@@ -68,7 +68,13 @@ class PartiallyPaid(models.Model):
     def __str__(self):
         return f"PartiallyPaid: {self.client.name} - {self.amount}"
 # Define the Invoice model incorporating fields from other models
+class Expenditures(models.Model):
+    inv_id = models.ForeignKey('Invoice', on_delete=models.DO_NOTHING, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    value = models.FloatField()
 
+    def __str__(self):
+        return f"{self.name} - {self.value}"
 class Invoice(models.Model, Utility):
     STATUS_CHOICES = [
         ('QUOTE', 'Quote'),

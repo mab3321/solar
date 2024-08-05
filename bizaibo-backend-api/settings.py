@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.facebook',
+    'django_filters',
 ]
 # Tell django-crispy-forms to use Bootstrap 4
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

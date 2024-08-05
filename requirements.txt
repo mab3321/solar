@@ -12,3 +12,4 @@ channels==4.1.0
 django-crispy-forms==2.1
 crispy-bootstrap4==2024.1
 python-docx
+django-filter~=24.3

@@ -28,7 +28,25 @@ from django.http import Http404
 from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
+
+from .filters import *
+
+# Mapping model names to their respective filter classes
+FILTER_MAPPING = {
+    'client': ClientFilter,
+    'solarpanel': SolarPanelFilter,
+    'inverter': InverterFilter,
+    'structure': StructureFilter,
+    'cabling': CablingFilter,
+    'netmetering': NetMeteringFilter,
+    'batteries': BatteriesFilter,
+    'lightningarrestor': LightningArrestorFilter,
+    'installation': InstallationFilter,
+    'invoice': InvoiceFilter,
+    'expenditures': ExpendituresFilter,
+}
 class DynamicModelViewSet(viewsets.ModelViewSet):
+
     def apply_filters(self, queryset):
         search_query = self.request.GET.get('q')
         date_range = self.request.GET.get('date_range')
@@ -68,12 +86,20 @@ class DynamicModelViewSet(viewsets.ModelViewSet):
                 sort_by = f'-{sort_by}'
             queryset = queryset.order_by(sort_by)
         return queryset
-    def get_queryset(self):
+    def get_queryset(self,request=None):
         model_name = self.kwargs['model_name']
         self.model = apps.get_model('crud', model_name)
         queryset = self.model.objects.all()
+        filter_class = FILTER_MAPPING.get(model_name.lower())
+        if filter_class:
+            my_filter = filter_class(request.GET, queryset=queryset)
+            queryset = my_filter.qs
+        else:
+            my_filter = None
+
         queryset = self.apply_filters(queryset)
         queryset = self.apply_sort(queryset)
+
         return queryset
 
     def get_serializer_class(self):
@@ -89,8 +115,10 @@ class DynamicModelViewSet(viewsets.ModelViewSet):
         
         return serializer_class
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset(request)
+
         page = self.paginate_queryset(queryset)
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
