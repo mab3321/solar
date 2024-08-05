@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-3">
+    <h2>Delete {{ model_name|capfirst }}</h2>
+    <p>Are you sure you want to delete "{{ object.id }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <a href="{% url 'generic_list' model_name=model_name %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>
+{% endblock %}

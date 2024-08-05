@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-3">
+  <h2>{{ view.action|capfirst }} {{ model_name|capfirst }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% crispy form %}
+    <a href="{% url 'generic_list' model_name|capfirst %}" class="btn btn-info">CANCEL</a>
+  </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,84 @@
+<!-- templates/manage_items.html -->
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Manage Items</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <h1>Manage Items</h1>
+    <form method="post">
+      {% csrf_token %} {{ formset.management_form }}
+      <div id="formset-container">
+        {% for form in formset %}
+        <div class="form-row">
+          {{ form|crispy }}
+          <button type="button" class="remove-form">Remove</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" id="add-form">Add another item</button>
+      <button type="submit">Save</button>
+    </form>
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        var formsetContainer = $("#formset-container");
+        var totalForms = $("#id_form-TOTAL_FORMS");
+        var formCount = formsetContainer.children(".form-row").length;
+
+        $("#add-form").click(function () {
+          var newForm = formsetContainer.children().last().clone(false);
+          newForm.find(":input").each(function () {
+            var name = $(this)
+              .attr("name")
+              .replace("-" + (formCount - 1) + "-", "-" + formCount + "-");
+            var id = "id_" + name;
+            $(this).attr({ name: name, id: id }).val("").removeAttr("checked");
+          });
+          newForm.find("label").each(function () {
+            var forValue = $(this)
+              .attr("for")
+              .replace("-" + (formCount - 1) + "-", "-" + formCount + "-");
+            $(this).attr("for", forValue);
+          });
+
+          totalForms.val(formCount + 1);
+          formCount++;
+          formsetContainer.append(newForm);
+        });
+
+        formsetContainer.on("click", ".remove-form", function () {
+          $(this).closest(".form-row").remove();
+
+          // Update total forms count
+          formCount--;
+          totalForms.val(formCount);
+
+          // Update the form indices
+          formsetContainer.children(".form-row").each(function (index) {
+            $(this)
+              .find(":input")
+              .each(function () {
+                var name = $(this)
+                  .attr("name")
+                  .replace(/-\d+-/, "-" + index + "-");
+                var id = "id_" + name;
+                $(this).attr({ name: name, id: id });
+              });
+
+            $(this)
+              .find("label")
+              .each(function () {
+                var forValue = $(this)
+                  .attr("for")
+                  .replace(/-\d+-/, "-" + index + "-");
+                $(this).attr("for", forValue);
+              });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

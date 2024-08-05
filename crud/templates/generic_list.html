@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% load custom_filters %}
+<!-- Load custom template tags and filters -->
+
+{% block content %}
+<div class="container mt-3">
+  <h2>{{ model_name|capfirst }} List</h2>
+  {% comment %} Add Navigation Baar {% endcomment %}
+   {% include "components/navbar.html" %}
+  
+  <!-- Add a search form at the top of the table -->
+  {% include "components/table.html" %}
+</div>
+  {% include "components/pagination.html" %}
+{% endblock %}

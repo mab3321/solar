@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block head %}
+  <style>
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group .col-md-4, .form-group .col-sm-10, .form-group .col-sm-2 {
+      padding: 5px;
+    }
+    label {
+      text-align: right;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+  <h2>{{ view.action|capfirst }} {{ model_name|capfirst }}</h2>
+  <form method="post" class="form-horizontal">
+    {% csrf_token %}
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">Name</label>
+      <div class="col-sm-10">{{ form.name }}</div>
+    </div>
+    
+    <!-- Solar Panel Fields -->
+    <div class="form-group row">
+      <div class="col-md-4">{{ form.solar_panel|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.solar_panel_quantity|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.solar_panel_price|as_crispy_field }}</div>
+    </div>
+    
+    <!-- Inverter Fields -->
+    <div class="form-group row">
+      <div class="col-md-4">{{ form.inverter|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.inverter_quantity|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.inverter_price|as_crispy_field }}</div>
+    </div>
+    <div class="form-group row">
+      <div class="col-md-4">{{ form.structure|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.structure_quantity|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.structure_price|as_crispy_field }}</div>
+    </div>
+    <div class="form-group row">
+      <div class="col-md-4">{{ form.cabling|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.cabling_quantity|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.cabling_price|as_crispy_field }}</div>
+    </div>
+    <div class="form-group row">
+      <div class="col-md-4">{{ form.net_metering|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.net_metering_quantity|as_crispy_field }}</div>
+      <div class="col-md-4">{{ form.net_metering_price|as_crispy_field }}</div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">discount</label>
+      <div class="col-sm-10">{{ form.discount }}</div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">shipping charges</label>
+      <div class="col-sm-10">{{ form.shipping_charges }}</div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">status</label>
+      <div class="col-sm-10">{{ form.status }}</div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">amount_paid</label>
+      <div class="col-sm-10">{{ form.amount_paid }}</div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">created_at</label>
+      <div class="col-sm-10">{{ form.created_at }}</div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2 col-form-label">updated_at</label>
+      <div class="col-sm-10">{{ form.updated_at }}</div>
+    <!-- Additional fields can be added in a similar pattern -->
+    
+    <div class="form-group row">
+      <div class="col-sm-10">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url 'generic_list' model_name|capfirst %}" class="btn btn-info">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

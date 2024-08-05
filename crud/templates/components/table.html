@@ -1,0 +1,57 @@
+{% load custom_filters %}
+<div class="container">
+  <div class="d-flex justify-content-start align-items-center align-btn">
+    <a href="{% url 'generic_create' model_name=model_name %}" class="btn btn-primary mb-2 mr-2">
+      Add New {{ model_name|capfirst }}
+    </a>
+  </div>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in page_obj %}
+    <tr>
+      <td>{{ item.pk }}</td>
+      <td>{{ item|get_attr:'name' }}</td>
+      <td>
+        <a href="{% url 'generic_update' model_name=model_name pk=item.pk %}" class="btn btn-info">Edit</a>
+        <a href="{% url 'generic_delete' model_name=model_name pk=item.pk %}" class="btn btn-danger">Delete</a>
+        <!-- Accordion button -->
+        <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.pk }}" aria-expanded="false" aria-controls="collapse{{ item.pk }}">
+          Details
+        </button>
+        <!-- Download button -->
+        {% if item|is_invoice %}
+        <a href="{{ item.get_download_url }}" class="btn btn-success">Download</a>
+      {% endif %}
+    
+      </td>
+    </tr>
+    <tr class="collapse" id="collapse{{ item.pk }}">
+      <td colspan="3">
+        <div class="accordion-body">
+          <table class="table">
+            <tbody>
+              {% for field_name, field_label in field_labels %}
+              {% if field_name not in 'id,name' %}
+              <tr>
+                <th>{{ field_label }}</th>
+                <td>{{ item|get_attr:field_name }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

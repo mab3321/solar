@@ -1,0 +1,134 @@
+header {
+    background: linear-gradient(to right, #352b70, #1f1c42);
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+/* styles.css */
+select {
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ced4da;
+}
+
+select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+/* Add this in your static/css/styles.css file or in a <style> tag in the header of your base template */
+/*
+*
+* ==========================================
+* CUSTOM UTIL CLASSES
+* ==========================================
+*
+*/
+.datepicker td,
+.datepicker th {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 0.85rem;
+}
+
+.datepicker {
+    margin-bottom: 3rem;
+}
+
+/*
+*
+* ==========================================
+* FOR DEMO PURPOSES
+* ==========================================
+*
+*/
+body {
+    min-height: 100vh;
+    background-color: #fafafa;
+}
+
+.input-group {
+    border-radius: 30rem;
+}
+
+input.form-control {
+    border-radius: 30rem 0 0 30rem;
+    border: none;
+}
+
+input.form-control:focus {
+    box-shadow: none;
+}
+
+input.form-control::placeholder {
+    font-style: italic;
+}
+
+.form-container {
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    /* Ensures elements are spaced out */
+    align-items: center;
+    /* Align items vertically in the center */
+}
+
+.date-picker-group,
+.search-group {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+    /* Space between the date picker and search form */
+}
+
+.date-picker-group label,
+.search-group input {
+    margin-right: 10px;
+    /* Spacing between label and input */
+}
+
+.form-input,
+.form-control {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.btn {
+    padding: 8px 16px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn:hover {
+    background-color: #218838;
+}
+.form-group {
+    margin-bottom: 10px;
+    /* Adds spacing below the date filter */
+}
+
+.form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    /* Adds space between form elements */
+    align-items: center;
+    /* Vertical alignment */
+    padding: 10px;
+}
+
+.btn-success {
+    padding: 8px 16px;
+    border-radius: 4px;
+}
