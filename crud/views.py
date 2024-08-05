@@ -91,8 +91,8 @@ class DynamicModelViewSet(viewsets.ModelViewSet):
         self.model = apps.get_model('crud', model_name)
         queryset = self.model.objects.all()
         filter_class = FILTER_MAPPING.get(model_name.lower())
-        if filter_class:
-            my_filter = filter_class(queryset=queryset)
+        if filter_class and request:
+            my_filter = filter_class(request.GET,queryset=queryset)
             queryset = my_filter.qs
         else:
             my_filter = None
@@ -393,7 +393,7 @@ class GenericModelListView(ListView):
     paginate_by = 5
     models = ['Client', 'SolarPanel', 'Inverter', 'Structure', 'Cabling', 'NetMetering', 'Batteries','LightningArrestor','Installation','Invoice']
     
-    def get_queryset(self):
+    def get_queryset(self,request=None):
         self.model = apps.get_model('crud', self.kwargs['model_name'])
         queryset = self.model.objects.all()
         queryset = self.apply_filters(queryset)
