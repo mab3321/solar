@@ -27,10 +27,37 @@ from django.http import Http404
 # imports for docx
 from docx import Document
 from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 from docx.shared import Pt, RGBColor
 
 from .filters import *
+def format_date(datetime_str):
+    try:
+        dt = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+        return dt.strftime('%Y-%m-%d')
+    except ValueError:
+        return datetime_str
 
+# Function to set the background color of a cell
+def set_cell_background(cell, color):
+    # Get the tc element of the cell
+    tc = cell._element
+    # Create a new shading element
+    tc_pr = tc.get_or_add_tcPr()
+    shading = OxmlElement('w:shd')
+    shading.set(qn('w:fill'), color)  # Set the fill attribute to the desired color
+    tc_pr.append(shading)
+def set_font_style(run, font_name, font_size):
+    run.font.name = font_name
+    run.font.size = font_size
+    r = run._element
+    r.rPr.rFonts.set(qn('w:eastAsia'), font_name)
+def add_styling(run,font_size=22):
+    # Set the desired style
+    run.font.size = Pt(22)
+    run.font.name = 'Roboto'
+    r = run._element
+    r.rPr.rFonts.set(qn('w:eastAsia'), 'Roboto')
 # Mapping model names to their respective filter classes
 FILTER_MAPPING = {
     'client': ClientFilter,
@@ -220,14 +247,14 @@ def modify_and_send_file(request, invoice_id):
             print(f"{key}: {value}")
         print('Invoice Details:', invoice.__dict__)
         client_data = [
-            {'name': 'solar_panel : ' + invoice.solar_panel.name, 'quantity': invoice.solar_panel_quantity, 'price': invoice.solar_panel_price},
-            {'name': 'inverter : ' + invoice.inverter.name, 'quantity': invoice.inverter_quantity, 'price': invoice.inverter_price},
-            {'name': 'structure : ' + invoice.structure.name, 'quantity': invoice.structure_quantity, 'price': invoice.structure_price},
-            {'name': 'cabling : ' + invoice.cabling.name, 'quantity': invoice.cabling_quantity, 'price': invoice.cabling_price},
-            {'name': 'net_metering : ' + invoice.net_metering.name, 'quantity': invoice.net_metering_quantity, 'price': invoice.net_metering_price},
-            {'name': 'battery : ' + invoice.battery.name, 'quantity': invoice.battery_quantity, 'price': invoice.battery_price},
-            {'name': 'lightning_arrestor : ' + invoice.lightning_arrestor.name, 'quantity': invoice.lightning_arrestor_quantity, 'price': invoice.lightning_arrestor_price},
-            {'name': 'installation : ' + invoice.installation.name, 'quantity': invoice.installation_quantity, 'price': invoice.installation_price},
+            {'name': '' + invoice.solar_panel.name, 'quantity': invoice.solar_panel_quantity, 'price': invoice.solar_panel_price},
+            {'name': '' + invoice.inverter.name, 'quantity': invoice.inverter_quantity, 'price': invoice.inverter_price},
+            {'name': '' + invoice.structure.name, 'quantity': invoice.structure_quantity, 'price': invoice.structure_price},
+            {'name': '' + invoice.cabling.name, 'quantity': invoice.cabling_quantity, 'price': invoice.cabling_price},
+            {'name': '' + invoice.net_metering.name, 'quantity': invoice.net_metering_quantity, 'price': invoice.net_metering_price},
+            {'name': '' + invoice.battery.name, 'quantity': invoice.battery_quantity, 'price': invoice.battery_price},
+            {'name': '' + invoice.lightning_arrestor.name, 'quantity': invoice.lightning_arrestor_quantity, 'price': invoice.lightning_arrestor_price},
+            {'name': '' + invoice.installation.name, 'quantity': invoice.installation_quantity, 'price': invoice.installation_price},
             ]
         
         final_block_data = [
@@ -303,17 +330,17 @@ def modify_and_send_file(request, invoice_id):
     
     def handle_table1(table):
         row = table.rows[2].cells
-        row[0].text = "Name : "+ str(invoice.name.name)
+        row[0].text = ""+ str(invoice.name.name)
         
         # Company Name
         row = table.rows[3].cells
-        row[0].text = "Company : "+ str(invoice.name.company)
+        row[0].text = ""+ str(invoice.name.company)
         # Address
         row = table.rows[4].cells
-        row[0].text = "Address : "+ str(invoice.name.city)
+        row[0].text = ""+ str(invoice.name.city)
         # Phone
         row = table.rows[5].cells
-        row[0].text = "Phone : "+ str(invoice.name.contact_number)
+        row[0].text = ""+ str(invoice.name.contact_number)
     
     def handle_table2(table):
         total = 0
@@ -325,8 +352,10 @@ def modify_and_send_file(request, invoice_id):
             row = table.rows[row_index].cells
             if float(item.get('quantity')) > 0.0:
                 row[0].text = str(item.get('name'))
+                
                 row[2].text = str(item.get('quantity'))
                 row[3].text = str(item.get('price'))
+                
                 price = int(item.get('quantity', 0)) * float(item.get('price', 0))
                 row[4].text = str(price)
                 total += price
@@ -348,13 +377,22 @@ def modify_and_send_file(request, invoice_id):
             label, value = list_get(final_block_data, index, default=("", ""))
 
             # Add installment data if available
+            
             row[0].text = str(installment.get('amount', ''))
-            row[1].text = installment.get('time', '')
-
+            
+            formatted_date = format_date(installment.get('time', ''))
+            row[1].text = formatted_date
+            for paragraph in row[1].paragraphs:
+                for run in paragraph.runs:
+                    set_font_style(run, 'Roboto', Pt(10))
             # Add final block data if available and not over index limit
             if index < len(final_block_data):
                 row[3].text = label
                 row[4].text = str(value)
+                if label == "Total":
+                    set_cell_background(row[4], "00ff00")
+                else:
+                    set_cell_background(row[4], "eeeeee")
 
             row_index += 1
 
@@ -394,12 +432,7 @@ def modify_and_send_file(request, invoice_id):
             paragraph = doc.paragraphs[index]
             paragraph.clear()  # Clear existing text
             run = paragraph.add_run(new_text)  # Add new text
-            
-            # Set the desired style
-            run.font.size = Pt(22)
-            run.font.name = 'Roboto'
-            r = run._element
-            r.rPr.rFonts.set(qn('w:eastAsia'), 'Roboto')
+            add_styling(run)
         else:
             print(f"No paragraph found at index {index}")
 
