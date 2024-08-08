@@ -180,6 +180,7 @@ def modify_and_send_file(request, invoice_id):
         # Print the inner content of the invoice object
         invoice_details = {
             'ID': invoice.id,
+            "system_capacity": invoice.system_capacity,
             'Client Name': get_foreign_key_display(invoice, 'name'),
             'Solar Panel': get_foreign_key_display(invoice, 'solar_panel'),
             'Solar Panel Quantity': invoice.solar_panel_quantity,
@@ -358,8 +359,6 @@ def modify_and_send_file(request, invoice_id):
             row_index += 1
 
     doc = Document(file_path)
-    # Adding Client data
-    print('Tables:', len(doc.tables))
     
     table = doc.tables[0]
     handle_table0(table)
@@ -390,6 +389,23 @@ def modify_and_send_file(request, invoice_id):
     from docxcompose.composer import Composer
     
     header = Document(header_path)
+    def replace_paragraph_text(doc, index, new_text):
+        if index < len(doc.paragraphs):
+            paragraph = doc.paragraphs[index]
+            paragraph.clear()  # Clear existing text
+            run = paragraph.add_run(new_text)  # Add new text
+            
+            # Set the desired style
+            run.font.size = Pt(22)
+            run.font.name = 'Roboto'
+            r = run._element
+            r.rPr.rFonts.set(qn('w:eastAsia'), 'Roboto')
+        else:
+            print(f"No paragraph found at index {index}")
+
+    # Replace text in paragraphs 2 and 3
+    replace_paragraph_text(header, 2, str(invoice.system_capacity) + ' KW')
+    replace_paragraph_text(header, 3, str(invoice.name.name))
     composer = Composer(header)
     footer = Document(footer_path)
     composer.append(doc)
