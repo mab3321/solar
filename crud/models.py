@@ -82,7 +82,7 @@ class Invoice(models.Model, Utility):
         ('PARTIALLY_PAID', 'Partially Paid'),
         ('PAID', 'Paid'),
     ]
-    
+    system_capacity = models.TextField(null=True, blank=True,default=0.0)
     name = models.ForeignKey('Client', on_delete=models.DO_NOTHING, null=True, blank=True)
     solar_panel = models.ForeignKey('SolarPanel', on_delete=models.DO_NOTHING, null=True, blank=True)
     solar_panel_quantity = models.IntegerField(default=0)

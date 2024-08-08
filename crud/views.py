@@ -237,7 +237,9 @@ def modify_and_send_file(request, invoice_id):
         ("Shipping", invoice.shipping_charges),
         ("Total", invoice.total - int(invoice.discount) + int(invoice.shipping_charges) - int(invoice.amount_paid))
         ]
+        header_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'header.docx')
         file_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'template.docx')
+        footer_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'footer.docx')
         if not os.path.exists(file_path):
             raise Http404("File not found.")
     except Invoice.DoesNotExist:
@@ -357,6 +359,8 @@ def modify_and_send_file(request, invoice_id):
 
     doc = Document(file_path)
     # Adding Client data
+    print('Tables:', len(doc.tables))
+    
     table = doc.tables[0]
     handle_table0(table)
     
@@ -380,9 +384,17 @@ def modify_and_send_file(request, invoice_id):
     table = doc.tables[3]
     handle_table3(table)
     tmp = tempfile.NamedTemporaryFile(delete=False)
-    doc.save(tmp.name)
+    
+    # doc.save(tmp.name)
     tmp.close()  # Manually close the file to ensure all data is written
-
+    from docxcompose.composer import Composer
+    
+    header = Document(header_path)
+    composer = Composer(header)
+    footer = Document(footer_path)
+    composer.append(doc)
+    composer.append(footer)
+    composer.save(tmp.name)
     tmp = open(tmp.name, 'rb')
     response = FileResponse(tmp, as_attachment=True, filename=f'modified_invoice_{invoice.id}.docx')
     response.headers['Content-Disposition'] = f'attachment; filename="modified_invoice_{invoice.id}.docx"'
