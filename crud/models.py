@@ -16,13 +16,13 @@ class Utility():
         return res
 
 class Client(models.Model,Utility):
-    cnic = models.CharField(max_length=15, unique=True)
-    name = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
+    cnic = models.CharField(max_length=15, unique=True,null=True,blank=True)
+    name = models.CharField(max_length=100,null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
     company = models.CharField(max_length=100, null=True, blank=True)
-    area = models.CharField(max_length=100,help_text="You Area (i.e DHA, Gulberg, etc.)")
-    contact_number = models.CharField(max_length=20)
-    monthly_consumption_units = models.IntegerField(null=True,help_text="Monthly consumption in units")
+    area = models.CharField(max_length=100,null=True,blank=True,help_text="You Area (i.e DHA, Gulberg, etc.)")
+    contact_number = models.CharField(max_length=20,null=True,blank=True)
+    monthly_consumption_units = models.IntegerField(null=True,blank=True,help_text="Monthly consumption in units")
 class SolarPanel(models.Model,Utility):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=50,null=True, blank=True)

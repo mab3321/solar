@@ -29,6 +29,7 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 from .filters import *
 def format_date(datetime_str):
@@ -309,7 +310,7 @@ def modify_and_send_file(request, invoice_id):
         r = run._element
         r.rPr.rFonts.set(qn('w:eastAsia'), 'Roboto')
         
-        run.font.size = Pt(12)  # Adjust the size as needed
+        run.font.size = Pt(10)  # Adjust the size as needed
         run.font.color.rgb = RGBColor(0, 51, 153)  # Dark blue color
         # set invoice No
         row = table.rows[3].cells
@@ -358,6 +359,9 @@ def modify_and_send_file(request, invoice_id):
                 
                 price = int(item.get('quantity', 0)) * float(item.get('price', 0))
                 row[4].text = str(price)
+                for cell in row:
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                 total += price
                 row_index += 1
 
@@ -384,15 +388,11 @@ def modify_and_send_file(request, invoice_id):
             row[1].text = formatted_date
             for paragraph in row[1].paragraphs:
                 for run in paragraph.runs:
-                    set_font_style(run, 'Roboto', Pt(10))
+                    set_font_style(run, 'Roboto', Pt(12))
             # Add final block data if available and not over index limit
             if index < len(final_block_data):
                 row[3].text = label
                 row[4].text = str(value)
-                if label == "Total":
-                    set_cell_background(row[4], "00ff00")
-                else:
-                    set_cell_background(row[4], "eeeeee")
 
             row_index += 1
 
@@ -417,8 +417,8 @@ def modify_and_send_file(request, invoice_id):
     rFonts.set(qn('w:eastAsia'), 'Roboto')
     table = doc.tables[2]
     handle_table2(table)
-    
-    table = doc.tables[3]
+    footer = Document(footer_path)
+    table = footer.tables[0]
     handle_table3(table)
     tmp = tempfile.NamedTemporaryFile(delete=False)
     
@@ -440,7 +440,7 @@ def modify_and_send_file(request, invoice_id):
     replace_paragraph_text(header, 2, str(invoice.system_capacity) + ' KW')
     replace_paragraph_text(header, 3, str(invoice.name.name))
     composer = Composer(header)
-    footer = Document(footer_path)
+    
     composer.append(doc)
     composer.append(footer)
     composer.save(tmp.name)
