@@ -255,7 +255,7 @@ def modify_and_send_file(request, invoice_id):
             {'name': '' + invoice.net_metering.name, 'quantity': invoice.net_metering_quantity, 'price': invoice.net_metering_price},
             {'name': '' + invoice.battery.name, 'quantity': invoice.battery_quantity, 'price': invoice.battery_price},
             {'name': '' + invoice.lightning_arrestor.name, 'quantity': invoice.lightning_arrestor_quantity, 'price': invoice.lightning_arrestor_price},
-            {'name': '' + invoice.installation.name, 'quantity': invoice.installation_quantity, 'price': invoice.installation_price},
+            {'name': 'installation ' + invoice.installation.name, 'quantity': invoice.installation_quantity, 'price': invoice.installation_price},
             ]
         
         final_block_data = [
@@ -264,7 +264,7 @@ def modify_and_send_file(request, invoice_id):
         ("Discounted Amount", invoice.total - int(invoice.discount)),
         ("Partially Paid", partially_paid),
         ("Shipping", invoice.shipping_charges),
-        ("Total", invoice.total - int(invoice.discount) + int(invoice.shipping_charges) - int(invoice.amount_paid))
+        ("Total", invoice.total - int(invoice.discount) + int(invoice.shipping_charges) - int(partially_paid))
         ]
         header_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'header.docx')
         file_path = os.path.join(settings.MEDIA_ROOT, 'invoices', 'template.docx')
@@ -358,7 +358,8 @@ def modify_and_send_file(request, invoice_id):
                 row[3].text = str(item.get('price'))
                 
                 price = int(item.get('quantity', 0)) * float(item.get('price', 0))
-                row[4].text = str(price)
+                row[4].text = f"{price:,}"
+                
                 for cell in row:
                     for paragraph in cell.paragraphs:
                         paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -392,7 +393,9 @@ def modify_and_send_file(request, invoice_id):
             # Add final block data if available and not over index limit
             if index < len(final_block_data):
                 row[3].text = label
-                row[4].text = str(value)
+                if value:
+                    int_val = int(value)
+                    row[4].text = f"{int_val:,}"
 
             row_index += 1
 

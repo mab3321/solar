@@ -132,7 +132,7 @@ class Invoice(models.Model, Utility):
         return f"Invoice {self.id} - {self.name.name}"
 
     def save(self, *args, **kwargs):
-        if self.status == 'PARTIALLY_PAID':
+        if self.status == 'PARTIALLY_PAID' or self.status == 'PAID':
             if self.amount_paid <= 0:
                 raise ValidationError("Amount paid must be provided for partially paid invoices.")
             
@@ -153,4 +153,4 @@ class Invoice(models.Model, Utility):
                 )
 
         super().save(*args, **kwargs)
-
+        
